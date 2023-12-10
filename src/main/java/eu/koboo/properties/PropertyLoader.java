@@ -1,27 +1,15 @@
-package eu.koboo.properties.property;
+package eu.koboo.properties;
 
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.LinkedHashSet;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 public class PropertyLoader {
 
     private static final Set<VarProperty<?>> PROPERTY_REGISTRY_SET = new LinkedHashSet<>();
-    private static final Properties BOOT_PROPERTIES_INSTANCE = new Properties();
-
-    private static String propertiesFileName = "boot.properties";
-    private static boolean throwUnknownKeys = false;
-
-    public static void propertiesFileName(String value) {
-        propertiesFileName = value;
-    }
-
-    public static void throwErrorUnknownProperties(boolean value) {
-        throwUnknownKeys = value;
-    }
+    private static final Properties ROOT = new Properties();
+    private static final String DEFAULT_FILE_NAME = "root.properties";
 
     public static void load(Class<?> propertyHolderClass) {
         for (Field declaredField : propertyHolderClass.getDeclaredFields()) {
@@ -47,17 +35,24 @@ public class PropertyLoader {
         }
 
         for (VarProperty<?> property : PROPERTY_REGISTRY_SET) {
-            BOOT_PROPERTIES_INSTANCE.setProperty(property.getPropertyKey(), String.valueOf(property.getDefaultValue()));
+            ROOT.setProperty(property.getPropertyKey(), String.valueOf(property.getDefaultValue()));
         }
     }
 
     public static <T> T get(VarProperty<T> property) {
-        String value = BOOT_PROPERTIES_INSTANCE.getProperty(property.getPropertyKey());
+        String value = ROOT.getProperty(property.getPropertyKey());
         return property.getMapper().apply(value);
     }
 
     public static void appendResource() {
-        InputStream stream = PropertyLoader.class.getClassLoader().getResourceAsStream(propertiesFileName);
+        appendResource(DEFAULT_FILE_NAME);
+    }
+
+    public static void appendResource(String resourceFile) {
+        if(!resourceFile.startsWith("/")) {
+            resourceFile = "/" + resourceFile;
+        }
+        InputStream stream = PropertyLoader.class.getClassLoader().getResourceAsStream(resourceFile);
         if (stream == null) {
             return;
         }
@@ -65,8 +60,12 @@ public class PropertyLoader {
     }
 
     public static void appendFile() {
+        appendFile(DEFAULT_FILE_NAME);
+    }
+
+    public static void appendFile(String filePath) {
         try {
-            File propertyFile = new File(propertiesFileName);
+            File propertyFile = new File(filePath);
             if (!propertyFile.exists()) {
                 return;
             }
@@ -77,9 +76,19 @@ public class PropertyLoader {
         }
     }
 
-    public static void appendArgs(String[] arguments) {
-        for (String argument : arguments) {
+    private static void appendStream(InputStream stream) {
+        Properties streamProperties = new Properties();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
+            streamProperties.load(reader);
+        } catch (IOException e) {
+            throw new RuntimeException("Couldn't load properties from stream \"" + stream.getClass().getName() + "\":", e);
+        }
+        append(streamProperties::getProperty);
+    }
 
+    public static void appendArguments(String[] arguments) {
+        Map<String, String> parsedArgumentMap = new LinkedHashMap<>();
+        for (String argument : arguments) {
             if (argument.startsWith("-")) {
                 argument = argument.replace("-", "");
             }
@@ -98,38 +107,36 @@ public class PropertyLoader {
             if (value == null) {
                 continue;
             }
-            BOOT_PROPERTIES_INSTANCE.setProperty(key, value);
+            parsedArgumentMap.put(key, value);
         }
+        append(parsedArgumentMap::get);
     }
 
-    public static void appendStream(InputStream stream) {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
-            BOOT_PROPERTIES_INSTANCE.load(reader);
-        } catch (IOException e) {
-            throw new RuntimeException("Couldn't load properties from stream \"" + stream.getClass().getName() + "\":", e);
-        }
-        validateProperties();
+    public static void appendEnvironmentVariables() {
+        append(System::getenv);
     }
 
-    private static void validateProperties() {
-        for (Object keyObject : BOOT_PROPERTIES_INSTANCE.keySet()) {
-            String key = String.valueOf(keyObject);
-            if (isPropertyKey(key)) {
-                continue;
-            }
-            if (throwUnknownKeys) {
-                throw new IllegalArgumentException("Found unknown property key \"" + key + "\"");
-            }
-        }
+    public static void appendSystemProperties() {
+        append(System::getProperty);
     }
 
-    private static boolean isPropertyKey(String key) {
+    private static void append(ValueResolver resolver) {
         for (VarProperty<?> property : PROPERTY_REGISTRY_SET) {
-            if (!property.getPropertyKey().equals(key)) {
+            String key = property.getPropertyKey();
+
+            // Resolve the value and check if it is null.
+            String value = resolver.resolveValue(key);
+            if(value == null || value.isEmpty()) {
                 continue;
             }
-            return true;
+
+            // Append the key + value into the boot properties.
+            ROOT.put(key, value);
         }
-        return false;
+    }
+
+    @FunctionalInterface
+    public interface ValueResolver {
+        String resolveValue(String key);
     }
 }

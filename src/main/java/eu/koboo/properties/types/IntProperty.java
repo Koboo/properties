@@ -1,6 +1,6 @@
-package eu.koboo.properties.property.types;
+package eu.koboo.properties.types;
 
-import eu.koboo.javalin.jsonsampler.property.VarProperty;
+import eu.koboo.properties.VarProperty;
 
 public class IntProperty extends VarProperty<Integer> {
     public IntProperty(String propertyKey, Integer defaultValue) {

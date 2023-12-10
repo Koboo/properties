@@ -1,4 +1,4 @@
-package eu.koboo.properties.property;
+package eu.koboo.properties;
 
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
