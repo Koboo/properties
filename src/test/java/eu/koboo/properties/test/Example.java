@@ -12,5 +12,13 @@ public class Example {
         PropertyLoader.appendSystemProperties();
         PropertyLoader.appendEnvironmentVariables();
         PropertyLoader.appendArguments(args);
+
+        boolean b = PropertyLoader.get(MyProperties.BOOLEAN);
+        double d = PropertyLoader.get(MyProperties.DOUBLE);
+        float f = PropertyLoader.get(MyProperties.FLOAT);
+        int i = PropertyLoader.get(MyProperties.INT);
+        long l = PropertyLoader.get(MyProperties.LONG);
+        short s = PropertyLoader.get(MyProperties.SHORT);
+        String string = PropertyLoader.get(MyProperties.STRING);
     }
 }
