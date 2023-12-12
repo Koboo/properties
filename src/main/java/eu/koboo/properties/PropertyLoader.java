@@ -49,9 +49,6 @@ public class PropertyLoader {
     }
 
     public static void appendResource(String resourceFile) {
-        if(!resourceFile.startsWith("/")) {
-            resourceFile = "/" + resourceFile;
-        }
         InputStream stream = PropertyLoader.class.getClassLoader().getResourceAsStream(resourceFile);
         if (stream == null) {
             return;
