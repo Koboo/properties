@@ -1,9 +1,10 @@
 plugins {
     id("java")
+    id("maven-publish")
 }
 
 group = "eu.koboo"
-version = "1.0-SNAPSHOT"
+version = "1.0.1"
 
 repositories {
     mavenCentral()
@@ -29,4 +30,25 @@ java {
 tasks.withType<JavaCompile>().configureEach {
     options.isFork = true
     options.isIncremental = true
+}
+
+publishing {
+    repositories {
+        mavenLocal()
+        maven {
+            name = "koboo-reposilite"
+            val releasesUrl = "https://reposilite.koboo.eu/releases"
+            val snapshotsUrl = "https://reposilite.koboo.eu/snapshots"
+            url = uri(if (version.toString().endsWith("SNAPSHOT")) snapshotsUrl else releasesUrl)
+            credentials {
+                username = System.getenv("REPO_USER")
+                password = System.getenv("REPO_TOKEN")
+            }
+        }
+    }
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+        }
+    }
 }

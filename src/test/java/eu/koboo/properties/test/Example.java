@@ -1,6 +1,7 @@
 package eu.koboo.properties.test;
 
 import eu.koboo.properties.PropertyLoader;
+import jdk.internal.org.jline.utils.OSUtils;
 
 public class Example {
 
@@ -14,6 +15,7 @@ public class Example {
         PropertyLoader.appendArguments(args);
 
         boolean b = PropertyLoader.get(MyProperties.BOOLEAN);
+        System.out.println(b);
         double d = PropertyLoader.get(MyProperties.DOUBLE);
         float f = PropertyLoader.get(MyProperties.FLOAT);
         int i = PropertyLoader.get(MyProperties.INT);
