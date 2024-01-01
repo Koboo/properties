@@ -1,7 +1,6 @@
 package eu.koboo.properties.test;
 
 import eu.koboo.properties.PropertyLoader;
-import jdk.internal.org.jline.utils.OSUtils;
 
 public class Example {
 

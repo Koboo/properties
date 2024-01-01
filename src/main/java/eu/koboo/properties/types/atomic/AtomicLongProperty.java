@@ -2,7 +2,6 @@ package eu.koboo.properties.types.atomic;
 
 import eu.koboo.properties.VarProperty;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class AtomicLongProperty extends VarProperty<AtomicLong> {

@@ -123,7 +123,7 @@ public class PropertyLoader {
 
             // Resolve the value and check if it is null.
             String value = resolver.resolveValue(key);
-            if(value == null || value.isEmpty()) {
+            if (value == null || value.isEmpty()) {
                 continue;
             }
 
