@@ -117,7 +117,7 @@ public class PropertyLoader {
         append(System::getProperty);
     }
 
-    private static void append(ValueResolver resolver) {
+    public static void append(ValueResolver resolver) {
         for (VarProperty<?> property : PROPERTY_REGISTRY_SET) {
             String key = property.getPropertyKey();
 
